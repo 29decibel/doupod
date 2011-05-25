@@ -69,14 +69,13 @@ def get_download_address(song_info)
 	artist = song_info[:artist]
 	id = song_info[:id]
 
-	puts "name encoding is #{song_name.encoding} and force encoding result is #{song_name.force_encoding('GB2312')}"
 	agent = Mechanize.new
-	puts "begin finding the download link of #{song_name}......."
+	puts "begin finding the download link of #{song_name}.......\n"
 	agent.get("#{GOOGLE_MUSIC_SEARCH}#{song_name}")
 	#find the first and then click
 	download_links = agent.page.links.select {|link| link.node and link.node[:title]=="下载"}
 	if download_links.count==0
-		puts "_______song #{song_name} not found on google_________"
+		puts "_______song #{song_name} not found on google_________\n"
 		return
 	end
 	raw_download_address = download_links.first.node[:onclick]
@@ -85,11 +84,13 @@ def get_download_address(song_info)
 	song_search_para = download_address[download_address.index('?')..-1]
 	puts "#{D_L}#{song_search_para}"
 	agent.get("#{D_L}#{song_search_para}".sub('%3D','='))
-	if agent.page.search("div.download a").last.nil?
-		puts "^^^^^^^^^^^^^^^^^^^^^song #{song_name} not found on google_________"
+	#get the download button's link
+	mp3_links = agent.page.search("div.download a").select {|node| node[:href].include? 'music'}
+	if mp3_links.empty?
+		puts "^^^^^^^^^^^^^^^^^^^^^song #{song_name} not found on google,shit ...iamge validate..._________"
 		return
 	end
-	mp3_address = agent.page.search("div.download a").last[:href]
+	mp3_address = mp3_links.first[:href]
 
 	#save audio file
 	if File.exist? "#{id}.mp3"
