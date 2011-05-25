@@ -5,7 +5,6 @@ require 'open-uri'
 require 'net/http'
 require 'mechanize'
 require 'fileutils'
-require 'firewatir'
 require 'yaml'
 
 LOGIN_URL = "http://www.douban.com/accounts/login?source=radio"

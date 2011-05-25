@@ -1,0 +1,9 @@
+just mv douban.yml.sample douban.yml
+and change to your douban's email and password
+
+open terminal
+ruby grab_dfm.rb
+
+make sure you've installed nokogiri and mechanize
+
+i hope you would like it
