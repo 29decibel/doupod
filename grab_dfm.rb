@@ -6,12 +6,14 @@ require 'net/http'
 require 'mechanize'
 require 'fileutils'
 require 'firewatir'
+require 'yaml'
 
 LOGIN_URL = "http://www.douban.com/accounts/login?source=radio"
 LOVED_SONG_URL = "http://douban.fm/mine?&type=liked"
 
-LOGIN_MAIL = "mike.d.1984@gmail.com"
-LOGIN_PASSWORD = "618675"
+DOUBAN_CONFIG = YAML.load File.open("douban.yml")
+LOGIN_MAIL = DOUBAN_CONFIG["email"]
+LOGIN_PASSWORD = DOUBAN_CONFIG["password"]
 
 def fetch_loved_songs
 	agent = Mechanize.new
@@ -84,6 +86,10 @@ def get_download_address(song_info)
 	song_search_para = download_address[download_address.index('?')..-1]
 	puts "#{D_L}#{song_search_para}"
 	agent.get("#{D_L}#{song_search_para}".sub('%3D','='))
+	if agent.page.search("div.download a").last.nil?
+		puts "^^^^^^^^^^^^^^^^^^^^^song #{song_name} not found on google_________"
+		return
+	end
 	mp3_address = agent.page.search("div.download a").last[:href]
 
 	#save audio file
