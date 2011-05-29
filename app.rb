@@ -22,3 +22,8 @@ get	'/liked_songs' do
 	password = params['password']
 	fetch_loved_songs(user,password).to_json
 end
+
+get '/download_address' do
+	content_type :text, 'charset' => 'utf-8'
+	get_download_address params[:song_name]
+end
