@@ -14,15 +14,16 @@ DOUBAN_CONFIG = YAML.load File.open("douban.yml")
 LOGIN_MAIL = DOUBAN_CONFIG["email"]
 LOGIN_PASSWORD = DOUBAN_CONFIG["password"]
 
-def fetch_loved_songs
+def fetch_loved_songs(user,password)
+	liked_songs=[]
 	agent = Mechanize.new
 	agent.get(LOGIN_URL)
 	if agent.page and agent.page.forms and agent.page.forms.count>0
 		puts "i came to the login page..."
-		agent.page.forms[0]["email"] = LOGIN_MAIL
-		agent.page.forms[0]["password"] = LOGIN_PASSWORD
-		agent.page.forms[0]["form_email"] = LOGIN_MAIL
-		agent.page.forms[0]["form_password"] = LOGIN_PASSWORD
+		agent.page.forms[0]["email"] = user 
+		agent.page.forms[0]["password"] = password
+		agent.page.forms[0]["form_email"] = user
+		agent.page.forms[0]["form_password"] = password
 
 		puts "begin to submit the login page"
 		agent.page.forms[0].submit
@@ -30,20 +31,19 @@ def fetch_loved_songs
 		agent.get(LOVED_SONG_URL)
 
 		#get all pages numbers 
-		max_page_number = agent.page.search("div.paginator a").map(&:inner_html).max {|num| num.to_i}
+		max_page_number = agent.page.search("div.paginator a").map(&:text).max {|num| num.to_i}
 		puts max_page_number
 
 		(0..max_page_number.to_i).each do |page_number|
 			puts page_number
 			url = "#{LOVED_SONG_URL}&start=#{9*page_number}"
 			puts url
-			get_song_info(agent,url).each do |song_info|
-				get_download_address song_info
-			end
+			liked_songs+=get_song_info(agent,url)
 		end
 	else
 		puts "can not redirect to login page"
 	end
+	liked_songs
 end
 
 ## given a agent and a url
@@ -54,7 +54,12 @@ def get_song_info(agent,url)
 	page = agent.get(url)
 	page.search("table.olts tr").map do |node|
 		if node.search('td').count==3
-			songs << {:name=>  "#{node.search('td')[0].inner_html}" ,:artist=>"#{node.search('td')[1].at('span').inner_html}",:id=>"#{node.search('td').last.at('a')[:id]}"}
+			songs << {
+				:name=>  "#{node.search('td')[0].text}" ,
+				:artist=>"#{node.search('td')[1].at('span').text}",
+				:id=>"#{node.search('td').last.at('a')[:id]}",
+				:album=>"#{node.search('td')[1].at('a')[:title]}",
+				:album_address=>"#{node.search('td')[1].at('a')[:href]}"}
 		end
 	end
 	songs
@@ -105,4 +110,4 @@ def get_download_address(song_info)
 	
 end
 
-fetch_loved_songs
+#fetch_loved_songs
